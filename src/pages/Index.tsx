@@ -1,11 +1,38 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookingForm } from '@/components/BookingForm';
 import { BookingStatus } from '@/components/BookingStatus';
 import { CoachLayout } from '@/components/CoachLayout';
+import { BookingHistory } from '@/components/BookingHistory';
+import { SeatPreferences } from '@/components/SeatPreferences';
 import { useBookingStore } from '@/store/bookingStore';
-import { Armchair } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Armchair, LogOut, LogIn } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   const { appStatus } = useBookingStore();
+  const { user, signOut, loading } = useAuth();
+
+  const handleAuthAction = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div className="text-center">
+          <Armchair className="h-12 w-12 text-primary animate-pulse mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -21,20 +48,43 @@ const Index = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Experience our asynchronous booking system with priority-based seat allocation
           </p>
+          
+          {/* Auth Button */}
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={handleAuthAction}
+              variant="outline"
+              className="gap-2"
+            >
+              {user ? (
+                <>
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </>
+              )}
+            </Button>
+          </div>
         </header>
 
         {/* Main Content */}
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Left Column - Booking Interface */}
-          <div className="space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             <BookingForm />
             {(appStatus === 'pending' || appStatus === 'confirmed' || appStatus === 'failed') && (
               <BookingStatus />
             )}
+            {user && <BookingHistory />}
           </div>
 
-          {/* Right Column - Coach Layout */}
-          <div className="lg:sticky lg:top-8">
+          {/* Right Column - Layout & Preferences */}
+          <div className="space-y-6 lg:sticky lg:top-8">
+            {user && <SeatPreferences />}
             <CoachLayout />
           </div>
         </div>
